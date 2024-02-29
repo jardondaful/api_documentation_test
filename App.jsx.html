@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: App.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: App.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState, createContext } from 'react';
+import Cookies from 'js-cookie';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import LoginRegPage from './pages/LoginRegPage/LoginRegPage';
+import RiderTripsPage from './pages/RiderTripsPage/RiderTripsPage';
+import DriverTripsPage from './pages/DriverTripsPage/DriverTripsPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
+import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
+import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
+import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
+import RiderAddTrip from './components/RiderAddTrip/RiderAddTrip';
+import './App.css';
+
+/**
+ * Context for sharing the authentication token and user role across the application.
+ * @type {React.Context&lt;{token: (string|null), role: (string|null)}>}
+ */
+export const TokenContext = createContext({ token: null, role: null });
+
+/**
+ * Main application component that sets up routing and global state.
+ * @returns {JSX.Element} The component markup.
+ */
+function App() {
+    // State hooks for token and role
+    const [token, setToken] = useState(Cookies.get('token'));
+    const [role, setRole] = useState(Cookies.get('role'));
+
+    /**
+     * Fetches the user's role from the server.
+     * @param {string} token - The authentication token.
+     */
+    const fetchRole = async (token) => {
+        // Perform the API call
+        const m_results = await fetch('/api/Authentication/role', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+            .then(data => data.text());
+        // Update cookies and state
+        Cookies.set('role', m_results, { expires: 0.125, secure: true });
+        setRole(m_results);
+    };
+
+    /**
+     * Sets the authentication token and fetches the user's role.
+     * @param {string} token - The authentication token.
+     */
+    async function setTokenWithCookie(token) {
+        await fetchRole(token);
+        Cookies.set('token', token, { expires: 0.125, secure: true });
+        setToken(token);
+    }
+
+    /**
+     * Removes the authentication token and user role.
+     */
+    function removeTokenWithCookie() {
+        Cookies.remove('token');
+        setToken(null);
+        Cookies.remove('role');
+        setRole(null);
+    }
+
+    // Conditionally render the login page or the main app based on the presence of a token
+    if (!token) {
+        return &lt;LoginRegPage setToken={setTokenWithCookie} />;
+    }
+    return (
+        &lt;Router>
+            &lt;div>
+                &lt;TokenContext.Provider value={{token: token, role: role}}>
+                    &lt;nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+                        &lt;div className="container-fluid">
+                            &lt;Link className="navbar-brand" to="/" style={{ fontFamily: 'Inika' }}>HaggleHaul&lt;/Link>
+                            &lt;button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                                &lt;span className="navbar-toggler-icon">&lt;/span>
+                            &lt;/button>
+                            &lt;div className="collapse navbar-collapse" id="navbarNavAltMarkup">
+                                &lt;div className="navbar-nav ms-auto">
+                                    &lt;Link className="nav-link" to="/trips">My Trips&lt;/Link>
+                                    &lt;Link className="nav-link" to="/profile">Profile&lt;/Link>
+                                    &lt;button className="nav-link" onClick={removeTokenWithCookie}>Sign Out&lt;/button>
+                                    {/* ... other navigation links */}
+                                &lt;/div>
+                            &lt;/div>
+                        &lt;/div>
+                    &lt;/nav>
+                    &lt;main className="pt-2 hh-app-flex">
+                        &lt;Routes>
+                            &lt;Route path="/" element={role === "rider" ? &lt;RiderTripsPage /> : &lt;DriverTripsPage />} />
+                            &lt;Route path="/trips" element={role === "rider" ? &lt;RiderTripsPage /> : &lt;DriverTripsPage />} />
+                            &lt;Route path="/rider-add-trip" element={&lt;RiderAddTrip />} />
+                            &lt;Route path="/profile" element={&lt;ProfilePage />} />
+                            &lt;Route path="/profile/activity" element={&lt;ActivityPage />} />
+                            &lt;Route path="/profile/wallet" element={&lt;WalletPage />} />
+                            &lt;Route path="/profile/messages" element={&lt;MessagesPage />} />
+                            &lt;Route path="/profile/settings" element={&lt;SettingsPage />} />
+                            {/* ... other routes */}
+                        &lt;/Routes>
+                    &lt;/main>
+                &lt;/TokenContext.Provider>
+            &lt;/div>
+        &lt;/Router>
+    );
+}
+
+export default App;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#App">App</a></li><li><a href="global.html#TokenContext">TokenContext</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Thu Feb 29 2024 01:15:28 GMT-0800 (Pacific Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
